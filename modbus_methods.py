@@ -15,12 +15,12 @@ logging.basicConfig()
 log = logging.getLogger()
 #log.setLevel(logging.DEBUG)
 
-sv = -10
+sv = 0
 tc1_stat = False
 tc2_stat = False
 ssr_stat = False
-pv1 = -10
-pv2 = -10
+pv1 = 0
+pv2 = 0
 
 client = None
 connection = False
@@ -33,14 +33,20 @@ def update_regs():
     global sv,pv1,pv2,tc1_stat,tc2_stat,ssr_stat, client
     #Starting add, num of reg to read, slave unit.
     #update TC values
-    pv1  = client.read_input_registers(rgs.PV1,count=1,slave=0x01).registers[0]/10 # address, count, slave address
-    pv2 = client.read_input_registers(rgs.PV2,count=1,slave=0x01).registers[0]/10 # address, count, slave address
+    pv1  = client.read_input_registers(rgs.PV1,count=1,slave=0x01).registers[0] # address, count, slave address
+    time.sleep(0.01)
+    pv2 = client.read_input_registers(rgs.PV2,count=1,slave=0x01).registers[0] # address, count, slave address
+    time.sleep(0.01)
     #read setpoint
-    sv  = client.read_holding_registers(rgs.SV1,count=1,slave=0x01).registers[0]/10 # address, count, slave address
+    sv  = client.read_holding_registers(rgs.SV1,count=1,slave=0x01).registers[0] # address, count, slave address
+    time.sleep(0.01)
     #check sys status
     tc1_fail = client.read_discrete_inputs(rgs.prob1_FS,slave=0x01).bits[0]
+    time.sleep(0.01)
     tc2_fail = client.read_discrete_inputs(rgs.prob2_FS,slave=0x01).bits[0]
+    time.sleep(0.01)
     ssr_act = client.read_discrete_inputs(rgs.ssr1_OS,slave=0x01).bits[0]
+    time.sleep(0.01)
 
     #convert bool to relevant string
     if tc1_fail: tc1_stat = "probe1 failure"
