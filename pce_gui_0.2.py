@@ -104,14 +104,15 @@ def start_periodic_read():
     read_thread.start()
 
 #selects Serial or TCP
-def method_sel(sel):
+def method_sel():
+    sel = cselect.get()
     #TCP
-    if sel:
+    if sel == 1:
         com_combobox['state']= 'disabled'
         refresh_button['state']='disabled'
     
     #COM
-    else:
+    elif sel == 0:
          com_combobox['state']= 'normal'
          refresh_button['state']='normal'
 
@@ -155,7 +156,7 @@ com_label.grid(row=1,column=0,padx=10,pady=5, sticky = 'e')
 comlist = mm.serial_ports()
 
 #choose COM port/ com combobox
-com_var = tk.StringVar()
+com_var = tk.StringVar(root)
 text_var = com_var
 
 com_combobox = ttk.Combobox(con_tab,textvariable = com_var, values = comlist)
@@ -181,9 +182,9 @@ con_type_label = ttk.Label(con_tab, text="Connection Method:")
 con_type_label.grid(row=0,column=0,padx=0,pady=5,sticky = 'e')
 
 #radiobutton for Serial/TCP
-cselect = tk.IntVar()
-s_radiobutton=tk.Radiobutton(con_tab, text = "Serial",variable = cselect,value = 0,command=method_sel(0)).grid(row=0,column=1,sticky='we')
-t_radiobutton=tk.Radiobutton(con_tab, text = "TCP",variable = cselect,value = 1, command=method_sel(1)).grid(row=0,column=2,sticky='w')
+cselect = tk.IntVar(root)
+s_radiobutton=tk.Radiobutton(con_tab, text = "Serial",variable = cselect,value = 0,command=method_sel()).grid(row=0,column=1,sticky='we')
+t_radiobutton=tk.Radiobutton(con_tab, text = "TCP",variable = cselect,value = 1, command=method_sel()).grid(row=0,column=2,sticky='w')
 
 ########################################################################
 ##CONTROL TAB
