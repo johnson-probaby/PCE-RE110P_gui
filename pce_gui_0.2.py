@@ -8,6 +8,7 @@ import sys
 import threading
 from threading import Thread, Event
 import re
+from tkinter import filedialog
 
 
 
@@ -20,16 +21,22 @@ def init_con():
     global con, dc, connect_button
     global com_combobox
     cport = com_combobox.get()
-    success = mm.connect_TCP(cport)
-    if success: 
-        print("connected")
-        #connect_button.config(style = "con")
-        time.sleep(0.5)
-        start_periodic_read()
+    ip = ip_entry.get()
+    port = port_entry.get()
+    if cselect.get()==1:
+        success = mm.connect_TCP(ip,port)
+        if success: 
+            print("connected")
+            #connect_button.config(style = "con")
+            time.sleep(0.5)
+            start_periodic_read()
 
-    else: 
-        print("connection failed")
-        #connect_button.config(style="dc")
+        else: 
+            print("connection failed")
+            #connect_button.config(style="dc")
+
+    else:
+        sucess = mm.connect_port(cport)
 
 #refresh com port list
 def refresh_com():
@@ -105,16 +112,20 @@ def start_periodic_read():
 
 #selects Serial or TCP
 def method_sel():
-    sel = cselect.get()
+    #sel = cselect.get()
     #TCP
-    if sel == 1:
-        com_combobox['state']= 'disabled'
-        refresh_button['state']='disabled'
+    if cselect.get() == 1:
+        com_combobox.config(state="disabled")
+        refresh_button.config(state="disabled")
+        ip_entry.config(state="normal")
+        port_entry.config(state="normal")
     
     #COM
-    elif sel == 0:
-         com_combobox['state']= 'normal'
-         refresh_button['state']='normal'
+    else: #cselect.get() == 1:
+         com_combobox.config(state="normal")
+         refresh_button.config(state="normal")
+         ip_entry.config(state="disabled")
+         port_entry.config(state="disabled")
 
 ########################################################################
 ########################################################################
@@ -180,11 +191,28 @@ dc.configure('dc', bg = 'red')
 #label for Serial/TCP methodology
 con_type_label = ttk.Label(con_tab, text="Connection Method:")
 con_type_label.grid(row=0,column=0,padx=0,pady=5,sticky = 'e')
+#spacer
+spacer =ttk.Label(con_tab,text = "     ").grid(row=1,column=3,padx=100,pady=5)
+
+#label for IP entry
+ip_label = ttk.Label(con_tab,text ='IP:')
+ip_label.grid(row=1, column = 4,padx=10,pady=5)
+
+#entry box for IP
+ip_entry = tk.Entry(con_tab)
+ip_entry.grid(row = 1, column = 5,padx=10,pady=5)
+
+#label for port entry
+port_label = ttk.Label(con_tab,text = 'Port:')
+port_label.grid(row=2, column = 4,padx=10,pady=5)
+#entry box for port
+port_entry = tk.Entry(con_tab)
+port_entry.grid(row = 2, column = 5,padx=10,pady=5)
 
 #radiobutton for Serial/TCP
-cselect = tk.IntVar(root)
-s_radiobutton=tk.Radiobutton(con_tab, text = "Serial",variable = cselect,value = 0,command=method_sel()).grid(row=0,column=1,sticky='we')
-t_radiobutton=tk.Radiobutton(con_tab, text = "TCP",variable = cselect,value = 1, command=method_sel()).grid(row=0,column=2,sticky='w')
+cselect = tk.IntVar()
+s_radiobutton=tk.Radiobutton(con_tab, text = "Serial",variable = cselect,value = 0,command=method_sel).grid(row=0,column=1,sticky='we')
+t_radiobutton=tk.Radiobutton(con_tab, text = "TCP",variable = cselect,value = 1, command=method_sel).grid(row=0,column=2,sticky='w')
 
 ########################################################################
 ##CONTROL TAB
