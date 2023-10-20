@@ -9,7 +9,10 @@ import threading
 from threading import Thread, Event
 import re
 from tkinter import filedialog
-
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from collections import deque
 
 
 
@@ -24,7 +27,21 @@ def init_con():
     ip = ip_entry.get()
     port = port_entry.get()
     if cselect.get()==1:
+        print(f"attempting TCP connection w/ IP: {ip} port: {port}...")
         success = mm.connect_TCP(ip,port)
+        if success: 
+            print("connected")
+            connect_button.config(style = "con")
+            time.sleep(0.5)
+            start_periodic_read()
+
+        else: 
+            print("connection failed")
+            connect_button.config(style="dc")
+
+    else:
+        print(f"attempting Serial connection w/ {cport}...")
+        success = mm.connect_port(cport)
         if success: 
             print("connected")
             #connect_button.config(style = "con")
@@ -34,9 +51,6 @@ def init_con():
         else: 
             print("connection failed")
             #connect_button.config(style="dc")
-
-    else:
-        sucess = mm.connect_port(cport)
 
 #refresh com port list
 def refresh_com():
@@ -95,7 +109,7 @@ def periodic_read():
         #print(dts)
         dT.set(dts)
 
-        time.sleep(0.1)
+        time.sleep(0.5)
         
 def up_readout(var, ind, mode):
     dis_sv['text'] = gsv.get()
@@ -219,14 +233,14 @@ t_radiobutton=tk.Radiobutton(con_tab, text = "TCP",variable = cselect,value = 1,
 ########################################################################
 #choose set value
 set_value = ttk.Label(feedback_tab,text="New Set Value (°C):")
-set_value.grid(row=1, column=0, padx=10, pady=5, sticky = 'e')
+set_value.grid(row=1, column=0, padx=0, pady=5, sticky = 'e')
 sv_entry = ttk.Entry(feedback_tab)
 sv_entry.insert(0,"0")
-sv_entry.grid(row=1, column=1, padx=10, pady=5)
+sv_entry.grid(row=1, column=1, padx=0, pady=5)
 
 #write SV button
 write_button = ttk.Button(feedback_tab, text="Write", command=write_sv)
-write_button.grid(row=1, column=2, padx=10, pady=5, sticky = "w")
+write_button.grid(row=1, column=2, padx=0, pady=5, sticky = "w")
 
 #line separating 
 
@@ -234,27 +248,69 @@ write_button.grid(row=1, column=2, padx=10, pady=5, sticky = "w")
 #this is for SV
 dis_sv_label = ttk.Label(feedback_tab, text = "Current Set Value (°C):", font = LFont)
 dis_sv = ttk.Label(feedback_tab,text =gsv.get(), font = LFont)
-dis_sv_label.grid(row=3, column=0, padx=10, pady=5,rowspan=2, columnspan=3,sticky='e')
-dis_sv.grid(row=3, column=3, padx=10, pady=5,rowspan=2)
+dis_sv_label.grid(row=3, column=0, padx=10, pady=5,rowspan=2, columnspan=2,sticky='e')
+dis_sv.grid(row=3, column=2, padx=10, pady=5,rowspan=2)
 
 #this is for PV1
 dis_pv1_label = ttk.Label(feedback_tab, text = "PV1 (°C):",font = LFont)
 dis_pv1 = tk.Label(feedback_tab,text =gpv1.get(),font = LFont)
-dis_pv1_label.grid(row=5, column=0, padx=10, pady=5, rowspan=2, columnspan=3,sticky='e')
-dis_pv1.grid(row=5, column=3, padx=10, pady=5, rowspan=2)
+dis_pv1_label.grid(row=5, column=0, padx=10, pady=5, rowspan=2, columnspan=2,sticky='e')
+dis_pv1.grid(row=5, column=2, padx=10, pady=5, rowspan=2)
 
 #this is for PV2
 dis_pv2_label = ttk.Label(feedback_tab, text = "PV2 (°C):",font = LFont)
 dis_pv2 = ttk.Label(feedback_tab,text =gpv2.get(),font = LFont)
-dis_pv2_label.grid(row=5, column=4, padx=1, pady=5, rowspan=2, columnspan=2, sticky='e')
-dis_pv2.grid(row=5, column=6, padx=10, pady=5, rowspan=2)
+dis_pv2_label.grid(row=5, column=3, padx=1, pady=5, rowspan=2, columnspan=2, sticky='e')
+dis_pv2.grid(row=5, column=5, padx=10, pady=5, rowspan=2)
 
 #this calculates delta T and displays it
 dis_deltaT_label = ttk.Label(feedback_tab, text = "PV1-SV1 ΔT (°C):",font = LFont)
 dis_deltaT = ttk.Label(feedback_tab,text = dT.get(),font = LFont)
-dis_deltaT_label.grid(row=3, column=4, padx=10, pady=5, rowspan=2, columnspan=2,sticky='e')
-dis_deltaT.grid(row=3, column=6, padx=10, pady=5, rowspan=2)
+dis_deltaT_label.grid(row=3, column=3, padx=10, pady=5, rowspan=2, columnspan=2,sticky='e')
+dis_deltaT.grid(row=3, column=5, padx=10, pady=5, rowspan=2)
 
+#start plot
+pv1_buffer = deque(maxlen = 180)
+pv2_buffer = deque(maxlen = 180)
+
+fig, ax = plt.subplots()
+fig.set_figheight(3.2)
+fig.set_figwidth(9.5)
+ax.set_title("Vaporizer Temp")
+line, = ax.plot([], label = "PV1", c='red')
+line2, = ax.plot([], label = "PV2", c = 'blue')
+
+def update_plot(frame):
+        value1 = gpv1.get()
+        value2 = gpv2.get()
+
+        pv1_buffer.append(value1)
+        pv2_buffer.append(value2)
+
+        line.set_data(range(len(pv1_buffer)),pv1_buffer)
+        line2.set_data(range(len(pv2_buffer)),pv2_buffer)
+
+        ax.relim()
+        ax.autoscale_view()
+
+
+
+ani = FuncAnimation(fig, update_plot, cache_frame_data = False)
+plt.tight_layout()
+plt.legend()
+canvas = FigureCanvasTkAgg(fig, master=feedback_tab)
+canvas_widget = canvas.get_tk_widget()
+canvas_widget.grid(row=10,column=0,rowspan=3, columnspan=6,sticky='ew')
+
+#close
+def on_closing():
+    if mm.client and mm.client.is_socket_open():
+        mm.quit()
+    
+    root.quit()
+    root.destroy()
+
+#pack tabs
 tab_parent.pack(expand=1, fill='both')
-
+root.protocol("WM_DELETE_WINDOW",on_closing)
 root.mainloop()
