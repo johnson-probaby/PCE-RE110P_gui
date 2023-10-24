@@ -32,8 +32,9 @@ def init_con():
         if success: 
             print("connected")
             connect_button.config(style = "con")
-            time.sleep(0.5)
+            time.sleep(0.3)
             start_periodic_read()
+            
 
         else: 
             print("connection failed")
@@ -101,21 +102,21 @@ def periodic_read():
         except AttributeError:
             print("\nerror reading register - restarting\n")
         #mm.print_regs() #troubleshooting
-        gsv.set(mm.sv/10)
-        gpv1.set(mm.pv1/10)
-        gpv2.set(mm.pv2/10)
-        dtstr = ((mm.pv1 - mm.sv)/10)
-        dts = round(dtstr,1)
-        #print(dts)
-        dT.set(dts)
+        #dtstr = ((mm.pv1 - mm.sv))
+        gsv.set(mm.sv)
+        gpv1.set(mm.pv1)
+        gpv2.set(mm.pv2)
+        #dts = round(dtstr,1)
+        #DtSet = str(dtstr)
+        #dT.set(mm.pv1*10)
 
         time.sleep(0.5)
         
 def up_readout(var, ind, mode):
-    dis_sv['text'] = gsv.get()
-    dis_pv1['text'] = gpv1.get()
-    dis_pv2['text'] = gpv2.get()
-    dis_deltaT['text'] = gpv1.get() - gsv.get()
+    dis_sv['text'] = (gsv.get())/10
+    dis_pv1['text'] = (gpv1.get())/10
+    dis_pv2['text'] = (gpv2.get())/10
+    dis_deltaT['text'] = (gpv1.get() - gsv.get())/10
 
 #threading for continuous register reading
 def start_periodic_read():
@@ -154,7 +155,7 @@ read = True
 gsv = tk.DoubleVar(root, -10)
 gpv1 = tk.DoubleVar(root, -10)
 gpv2 = tk.DoubleVar(root, -10)
-dT = tk.DoubleVar(root, -10)
+dT = tk.StringVar(root, "-10")
 
 gsv.trace('w',up_readout)
 gpv1.trace('w',up_readout)
@@ -272,6 +273,7 @@ dis_deltaT.grid(row=3, column=5, padx=10, pady=5, rowspan=2)
 #start plot
 pv1_buffer = deque(maxlen = 180)
 pv2_buffer = deque(maxlen = 180)
+sv1_buffer = deque(maxlen = 180)
 
 fig, ax = plt.subplots()
 fig.set_figheight(3.2)
@@ -279,19 +281,24 @@ fig.set_figwidth(9.5)
 ax.set_title("Vaporizer Temp")
 line, = ax.plot([], label = "PV1", c='red')
 line2, = ax.plot([], label = "PV2", c = 'blue')
+line3, = ax.plot([], label = "Set Value", c = 'green')
 
 def update_plot(frame):
-        value1 = gpv1.get()
-        value2 = gpv2.get()
+        if mm.connection:
+            value1 = gpv1.get()/10
+            value2 = gpv2.get()/10
+            value3 = gsv.get()/10
 
-        pv1_buffer.append(value1)
-        pv2_buffer.append(value2)
+            pv1_buffer.append(value1)
+            pv2_buffer.append(value2)
+            sv1_buffer.append(value3)
 
-        line.set_data(range(len(pv1_buffer)),pv1_buffer)
-        line2.set_data(range(len(pv2_buffer)),pv2_buffer)
+            line.set_data(range(len(pv1_buffer)),pv1_buffer)
+            line2.set_data(range(len(pv2_buffer)),pv2_buffer)
+            line3.set_data(range(len(sv1_buffer)),sv1_buffer)
 
-        ax.relim()
-        ax.autoscale_view()
+            ax.relim()
+            ax.autoscale_view()
 
 
 
