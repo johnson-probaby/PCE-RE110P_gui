@@ -112,9 +112,9 @@ def serial_ports():
             pass
     return result
 
-def connect_port(com_port):
+def connect_port(com_port, br):
     global client, connection
-    client= ModbusClient(method = "rtu", port=com_port,stopbits = 1, bytesize = 8, parity = 'N', baudrate= 38400, unit=1)
+    client= ModbusClient(method = "rtu", port=com_port,stopbits = 1, bytesize = 8, parity = 'N', baudrate= int(br), unit=1)
     connection = client.connect()
     connection = client.connected
     #print(connection)
@@ -125,9 +125,9 @@ def connect_port(com_port):
         return False
     else: return connection
 
-def connect_TCP(ip):
+def connect_TCP(ip,prt,br):
     global client, connection
-    client= ModbusTcpClient(method = "rtu", host=ip, port=502, stopbits = 1, bytesize = 8, parity = 'N', baudrate= 38400, unit=1)
+    client= ModbusTcpClient(method = "rtu", host=ip, port=prt, stopbits = 1, bytesize = 8, parity = 'N', baudrate= br, unit=1)
     connection = client.connect()
     connection = client.connected
     #print(connection)

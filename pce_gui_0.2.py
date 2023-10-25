@@ -24,11 +24,12 @@ def init_con():
     global con, dc, connect_button
     global com_combobox
     cport = com_combobox.get()
+    br = br_combo.get()
     ip = ip_entry.get()
     port = port_entry.get()
     if cselect.get()==1:
-        print(f"attempting TCP connection w/ IP: {ip} port: {port}...")
-        success = mm.connect_TCP(ip,port)
+        print(f"attempting TCP connection w/ IP: {ip} port: {port} at Baud Rate: {br}...")
+        success = mm.connect_TCP(ip,port, br)
         if success: 
             print("connected")
             connect_button.config(style = "con")
@@ -41,8 +42,8 @@ def init_con():
             connect_button.config(style="dc")
 
     else:
-        print(f"attempting Serial connection w/ {cport}...")
-        success = mm.connect_port(cport)
+        print(f"attempting Serial connection w/ {cport} at Baud Rate: {br}...")
+        success = mm.connect_port(cport, br)
         if success: 
             print("connected")
             #connect_button.config(style = "con")
@@ -195,7 +196,7 @@ refresh_button.grid(row=1, column=2, padx=10, pady=5, sticky = "w")
 
 #connect button
 connect_button = ttk.Button(con_tab, text="Connect", command=init_con)
-connect_button.grid(row=3, column=2, padx=10, pady=5, sticky = "w")
+connect_button.grid(row=4, column=2, padx=10, pady=5, sticky = "w")
 
 #connect buttion styles
 con = Style()
@@ -211,24 +212,35 @@ spacer =ttk.Label(con_tab,text = "     ").grid(row=1,column=3,padx=100,pady=5)
 
 #label for IP entry
 ip_label = ttk.Label(con_tab,text ='IP:')
-ip_label.grid(row=1, column = 4,padx=10,pady=5)
+ip_label.grid(row=2, column = 0,padx=10,pady=5)
 
 #entry box for IP
 ip_entry = tk.Entry(con_tab)
-ip_entry.grid(row = 1, column = 5,padx=10,pady=5)
+ip_entry.grid(row = 2, column = 1,padx=10,pady=5)
 
 #label for port entry
 port_label = ttk.Label(con_tab,text = 'Port:')
-port_label.grid(row=2, column = 4,padx=10,pady=5)
+port_label.grid(row=3, column = 0,padx=10,pady=5)
 #entry box for port
 port_entry = tk.Entry(con_tab)
-port_entry.grid(row = 2, column = 5,padx=10,pady=5)
+port_entry.grid(row = 3, column = 1,padx=10,pady=5)
 
+#label for baud rate
+br_label = ttk.Label(con_tab,text = 'Baud Rate:')
+br_label.grid(row=4, column = 0,padx=10,pady=5)
+
+#combobox for baud rate
+br_var = tk.IntVar(root)
+br_list = [4800,9600,19200,38400,57600] 
+br_combo = ttk.Combobox(con_tab, values = br_list)
+br_combo.grid(row=4,column = 1,padx=10,pady=5)
+br_combo.set(br_list[0])
 #radiobutton for Serial/TCP
 cselect = tk.IntVar()
 s_radiobutton=tk.Radiobutton(con_tab, text = "Serial",variable = cselect,value = 0,command=method_sel).grid(row=0,column=1,sticky='we')
 t_radiobutton=tk.Radiobutton(con_tab, text = "TCP",variable = cselect,value = 1, command=method_sel).grid(row=0,column=2,sticky='w')
-
+cselect.set(0)
+method_sel()
 ########################################################################
 ##CONTROL TAB
 ########################################################################
