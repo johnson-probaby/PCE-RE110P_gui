@@ -101,7 +101,9 @@ def periodic_read():
             mm.update_regs()
 
         except AttributeError:
-            print("\nerror reading register - restarting\n")
+            print("\nerror reading register - ")
+            print(AttributeError)
+            print("- restarting\n")
         #mm.print_regs() #troubleshooting
         #dtstr = ((mm.pv1 - mm.sv))
         gsv.set(mm.sv)
@@ -234,13 +236,15 @@ br_var = tk.IntVar(root)
 br_list = [4800,9600,19200,38400,57600] 
 br_combo = ttk.Combobox(con_tab, values = br_list)
 br_combo.grid(row=4,column = 1,padx=10,pady=5)
-br_combo.set(br_list[0])
+br_combo.set(br_list[1])
+
 #radiobutton for Serial/TCP
 cselect = tk.IntVar()
 s_radiobutton=tk.Radiobutton(con_tab, text = "Serial",variable = cselect,value = 0,command=method_sel).grid(row=0,column=1,sticky='we')
 t_radiobutton=tk.Radiobutton(con_tab, text = "TCP",variable = cselect,value = 1, command=method_sel).grid(row=0,column=2,sticky='w')
 cselect.set(0)
 method_sel()
+
 ########################################################################
 ##CONTROL TAB
 ########################################################################
